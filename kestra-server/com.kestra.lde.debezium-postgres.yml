@@ -1,0 +1,25 @@
+id: debezium-postgres
+namespace: com.kestra.lde
+
+tasks:
+  - id: capture
+    type: io.kestra.plugin.debezium.postgres.Capture
+    hostname: host.docker.internal
+    port: 5432
+    maxDuration: "PT1M"
+    password: postgres
+    username: postgres
+    database: debezium
+    snapshotMode: ALWAYS
+    pluginName: PGOUTPUT
+    slotName: dbpostgres
+  - id: "log"
+    type: "io.kestra.core.tasks.log.Log"
+    level: WARN
+    message: '{{outputs.capture.uris["debezium.accounts"]}}'
+  - id: "file_transform"
+    type: "io.kestra.plugin.scripts.nashorn.FileTransform"
+    from: "{{outputs.capture.uris['debezium.accounts']}}"
+    script: |
+      logger.info('row: {}', row)
+        
